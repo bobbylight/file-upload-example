@@ -1,0 +1,12 @@
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    padding-top: 70px; /* Offset for banner */
+}
+
+.app-form {
+    padding: 1rem 10rem;
+}
