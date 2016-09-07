@@ -1,0 +1,8 @@
+<div class="upload-strategy-selector" data-toggle="buttons">
+    <div class="btn-group" role="group" aria-label="Upload Strategy">
+      <button type="button" class="btn btn-default" ng-click="setUploadStrategy('part')" ng-class="{ 'active': uploadStrategy === 'part'}">Part</button>
+      <button type="button" class="btn btn-default" ng-click="setUploadStrategy('multipartFile')" ng-class="{ 'active': uploadStrategy === 'multipartFile'}">MultipartFile</button>
+      <button type="button" class="btn btn-default" ng-click="setUploadStrategy('commonsFileUploadStreamingApi')" ng-class="{ 'active': uploadStrategy === 'commonsFileUploadStreamingApi'}">Commons FileUpload</button>
+      <button type="button" class="btn btn-default" ng-click="setUploadStrategy('rawServlet')" ng-class="{ 'active': uploadStrategy === 'rawServlet'}">Raw Servlet</button>
+    </div>
+</div>

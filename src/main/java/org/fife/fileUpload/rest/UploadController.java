@@ -3,7 +3,10 @@ package org.fife.fileUpload.rest;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.fife.fileUpload.exceptions.FileUploadException;
 import org.fife.fileUpload.reps.UploadResponseRep;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
@@ -22,6 +26,29 @@ import java.util.Collection;
 @RequestMapping("/upload")
 public class UploadController {
 
+    /**
+     * Injected just so we can return information about it.
+     */
+    @Autowired
+    private MultipartResolver multipartResolver;
+
+    @Autowired
+    private Environment environment;
+
+    /**
+     * Creates and initializes basic properties of a response about an upload.
+     *
+     * @param request The request received.
+     * @return A response rep, with some fields populated.
+     */
+    private UploadResponseRep createUploadResponseRep(HttpServletRequest request) {
+        UploadResponseRep rep = new UploadResponseRep();
+        rep.setRequestType(request.getClass().getName());
+        rep.setMultipartResolverType(multipartResolver == null ? null : multipartResolver.getClass().getName());
+        rep.setFileSizeThreshold(environment.getProperty("spring.http.multipart.file-size-threshold"));
+        return rep;
+    }
+
     @RequestMapping(method = RequestMethod.POST, path = "/part",
             consumes = { MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -29,8 +56,7 @@ public class UploadController {
 
         Collection<Part> parts = request.getParts();
 
-        UploadResponseRep rep = new UploadResponseRep();
-        rep.setRequestType(request.getClass().getName());
+        UploadResponseRep rep = createUploadResponseRep(request);
 
         Part part = parts.iterator().next();
         rep.setDesc("Part type == " + part.getClass().getName());
@@ -47,8 +73,7 @@ public class UploadController {
     public UploadResponseRep getViaMultipartFile(@RequestParam MultipartFile file,
                                                  HttpServletRequest request) throws Exception {
 
-        UploadResponseRep rep = new UploadResponseRep();
-        rep.setRequestType(request.getClass().getName());
+        UploadResponseRep rep = createUploadResponseRep(request);
 
         try (InputStream in = file.getInputStream()) {
             rep.setInputStreamType(in.getClass().getName());
@@ -62,8 +87,7 @@ public class UploadController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UploadResponseRep> getViaCommonsFileUploadStreamingApi(HttpServletRequest request) throws Exception {
 
-        UploadResponseRep rep = new UploadResponseRep();
-        rep.setRequestType(request.getClass().getName());
+        UploadResponseRep rep = createUploadResponseRep(request);
 
         ServletFileUpload upload = new ServletFileUpload();
 
@@ -71,7 +95,7 @@ public class UploadController {
         FileItemIterator iter = upload.getItemIterator(request);
         // TODO: This seems to always evaluate to true.  Is Spring parsing the HTTP request before we get here for some reason?
         if (!iter.hasNext()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new FileUploadException("FileItemIterator was empty");
         }
         FileItemStream item = iter.next();
 

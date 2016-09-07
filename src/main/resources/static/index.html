@@ -5,6 +5,7 @@
 
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/default.min.css">
     <link href="app.css" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.1.0.js"
@@ -14,11 +15,13 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
 
     <script src="js/main.js"></script>
     <script src="js/main-controller.js"></script>
     <script src="js/banner-directive.js"></script>
     <script src="js/custom-on-change-directive.js"></script>
+    <script src="js/upload-strategy-selector-directive.js"></script>
 
 </head>
 
@@ -33,6 +36,11 @@
         <form class="app-form" novalidate >
 
             <div class="form-group">
+                <label>Upload Strategy</label>
+                <upload-strategy-selector upload-strategy="vm.uploadStrategy"></upload-strategy-selector>
+            </div>
+
+            <div class="form-group">
                 <label for="file">File</label>
                 <input type="file" id="file" name="file" custom-on-change="vm.fileSelected">
                 <p class="help-block">This file is {{vm.selectedFileSize}}</p>
@@ -41,29 +49,51 @@
             <button type="submit" class="btn btn-primary" ng-disabled="vm.file == null" ng-click="vm.uploadFile()">Submit</button>
         </form>
 
-        <div class="panel panel-primary" ng-show="vm.uploadResponse != null">
+        <div class="panel panel-primary" ng-show="vm.uploadResponse != null || vm.errorOccurred">
 
             <div class="panel-heading">
-                Upload successful!
+                Upload Result
             </div>
 
             <div class="panel-body">
 
-                <!--{{vm.uploadResponse}}-->
-
-                <div class="form-group">
-                    <label for="responseDate">Submission time</label>
-                    <input disabled class="form-control" name="responseDate" id="responseDate" value="{{vm.response.date | date:'yyyy-MM-dd HH:mm:ss Z'}}">
+                <div ng-show="vm.errorOccurred">
+                    Sorry, an error occurred.  Hopefully the response body helps:
+                    <pre class="error-json">
+                    </pre>
                 </div>
 
-                <div class="form-group">
-                    <label for="responsePartInputStreamType">Part-or-MultipartFile input stream type</label>
-                    <input disabled class="form-control" name="responsePartInputStreamType" id="responsePartInputStreamType" value="{{vm.response.partInputStreamType}}">
-                </div>
+                <div ng-show="!vm.errorOccurred">
 
-                <div class="form-group">
-                    <label for="requestType">Request type</label>
-                    <input disabled class="form-control" name="requestType" id="requestType" value="{{vm.response.requestType}}">
+                    <div class="form-group">
+                        <label for="responseDate">Path</label>
+                        <input disabled class="form-control" name="path" id="path" value="{{vm.submittedUrl}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="responseDate">Submission time</label>
+                        <input disabled class="form-control" name="responseDate" id="responseDate" value="{{vm.response.date | date:'yyyy-MM-dd HH:mm:ss Z'}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="responsePartInputStreamType">Part-or-MultipartFile input stream type</label>
+                        <input disabled class="form-control" name="responsePartInputStreamType" id="responsePartInputStreamType" value="{{vm.response.inputStreamType}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requestType">Request type</label>
+                        <input disabled class="form-control" name="requestType" id="requestType" value="{{vm.response.requestType}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requestType">Multipart Resolver Type (whether or not it was used)</label>
+                        <input disabled class="form-control" name="multipartResolverType" id="multipartResolverType" value="{{vm.response.multipartResolverType}}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requestType">File size threshold</label>
+                        <input disabled class="form-control" name="fileSizeThreshold" id="fileSizeThreshold" value="{{vm.response.fileSizeThreshold}}">
+                    </div>
                 </div>
 
             </div>

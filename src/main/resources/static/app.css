@@ -10,3 +10,7 @@ body {
 .app-form {
     padding: 1rem 10rem;
 }
+
+.error-json {
+    margin-top: 1rem;
+}
