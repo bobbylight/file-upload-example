@@ -8,13 +8,15 @@ server for every file uploaded.  Unfortunately, this is standard behavior.
 
 The long and short of playing around is:
 * Both with commons-fileupload and without, uploaded files are stored either as a byte array in memory, or as a temporary file.  No way around this.
-* It _might_ be possible to use commons-fileupload's request parsing API to read an uploaded file as a stream, and not buffered somehow.  See:  http://stackoverflow.com/questions/26172346/how-to-lazily-stream-using-httpservletrequestgetpartname.  I have not tested this yet.
-* Can something be done with websockets?
+* It's be possible to use commons-fileupload's request parsing API to read an uploaded file as a stream, directly off of the request, without it being buffered into memory or a file.  See `UploadServlet` and `UploadController.getViaCommonsFileUploadStreamingApi()`.
+* Websockets aren't explored, but might be a cool way to do things too.
 
-Tried with and without commons-fileupload.  It appears that the Servlet 3.0 Parts API supersedes commons-fileupload, and
-indeed, with Spring Boot the default parts implementation uses a version of commons-fileupload copied into Tomcat (or,
-if using Jetty, Jetty has its own `MultiPartInputStreamParser.MultiPart` class for a Parts implementation that behaves
-the same as that of commons-fileupload).
+You can configure things to use commons-fileupload, or the standard Spring multipart implementation.  It appears that the
+Servlet 3.0 Parts API supersedes commons-fileupload, and indeed, with Spring Boot the default parts implementation uses
+a version of commons-fileupload copied into Tomcat (or, if using Jetty, Jetty has its own
+`MultiPartInputStreamParser.MultiPart` class for a Parts implementation that behaves the same as that of commons-fileupload).
+However, I believe using the Parts API always buffers files into memory/disk, so the parts can be accessed in arbitrary
+order.
 
 TODO:
 * UI means of toggling between the different endpoints that parse uploads differently

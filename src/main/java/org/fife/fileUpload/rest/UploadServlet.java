@@ -6,6 +6,7 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.fife.fileUpload.exceptions.FileUploadException;
 import org.fife.fileUpload.reps.UploadResponseRep;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.web.context.WebApplicationContext;
@@ -22,7 +23,11 @@ import java.io.PrintWriter;
 
 /**
  * An old-school servlet implementation, just for comparison.  Check out {@code UploadController} for a more modern
- * approach.
+ * approach.<p>
+ *
+ * This servlet uses the commons-fileupload's streaming API to read the uploaded file right off of the request.  It
+ * shows that this is possible in a servlet, even when spring.http.multipart.enabled=true, since, because we're not
+ * in a controller, Spring doesn't parse the request itself.
  */
 public class UploadServlet extends HttpServlet {
 
@@ -41,7 +46,11 @@ public class UploadServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         ApplicationContext ac = (ApplicationContext)config.getServletContext().getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
-        multipartResolver = (MultipartResolver)ac.getBean("multipartResolver");
+        try {
+            multipartResolver = (MultipartResolver) ac.getBean("multipartResolver");
+        } catch (NoSuchBeanDefinitionException e) {
+            // NOSONAR - swallow, this just means we've removed the multipartResolver from our config
+        }
     }
 
     /**
@@ -77,7 +86,7 @@ public class UploadServlet extends HttpServlet {
 
             // NOTE: We're doing no real validation here, this is just for test purposes
             FileItemIterator iter = upload.getItemIterator(request);
-            // TODO: See UploadController.getViaCommonsFileUploadStreamingApi().  Why does this work here but not there?
+            // Note: This is identical to UploadController.getViaCommonsFileUploadStreamingApi().
             if (!iter.hasNext()) {
                 throw new FileUploadException("FileItemIterator was empty");
             }

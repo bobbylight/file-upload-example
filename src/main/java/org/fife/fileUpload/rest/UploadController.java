@@ -27,7 +27,9 @@ import java.util.Collection;
 public class UploadController {
 
     /**
-     * Injected just so we can return information about it.
+     * Injected just so we can return information about it.  If Spring's multipart support is enabled in
+     * {@code application.properties}, and/or we add back CommonsMultipartResolver in our configuration,
+     * re-autowire this so we get more information.
      */
     @Autowired
     private MultipartResolver multipartResolver;
@@ -55,6 +57,9 @@ public class UploadController {
     public UploadResponseRep getViaRequestPart(HttpServletRequest request) throws Exception {
 
         Collection<Part> parts = request.getParts();
+        if (parts.isEmpty()) {
+            throw new FileUploadException("No parts found on request.  Make sure Spring's multipart support is enabled for this upload method to work");
+        }
 
         UploadResponseRep rep = createUploadResponseRep(request);
 
@@ -70,8 +75,12 @@ public class UploadController {
     @RequestMapping(method = RequestMethod.POST, path = "/multipartFile",
             consumes = { MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public UploadResponseRep getViaMultipartFile(@RequestParam MultipartFile file,
+    public UploadResponseRep getViaMultipartFile(@RequestParam(required = false) MultipartFile file,
                                                  HttpServletRequest request) throws Exception {
+
+        if (file == null) {
+            throw new FileUploadException("MultipartFile was null (likely no parts on request).  Make sure Spring's multipart support is enabled for this upload method to work");
+        }
 
         UploadResponseRep rep = createUploadResponseRep(request);
 
@@ -82,6 +91,14 @@ public class UploadController {
         return rep;
     }
 
+    /**
+     * Use commons-fileupload's streaming API to read the uploaded file straight off of the socket, as an InputStream.
+     * This won't work if spring.http.multipart.enabled=true, due to the request being pre-processed.
+     *
+     * @param request
+     * @return
+     * @throws Exception
+     */
     @RequestMapping(method = RequestMethod.POST, path = "/commonsFileUploadStreamingApi",
             consumes = { MediaType.MULTIPART_FORM_DATA_VALUE },
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -93,7 +110,6 @@ public class UploadController {
 
         // NOTE: We're doing no real validation here, this is just for test purposes
         FileItemIterator iter = upload.getItemIterator(request);
-        // TODO: This seems to always evaluate to true.  Is Spring parsing the HTTP request before we get here for some reason?
         if (!iter.hasNext()) {
             throw new FileUploadException("FileItemIterator was empty");
         }
