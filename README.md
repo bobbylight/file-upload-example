@@ -7,8 +7,10 @@ that allows multiple users to concurrently upload large-ish files if the multipa
 server for every file uploaded.  Unfortunately, this is standard behavior.
 
 The long and short of playing around is:
-* Both with commons-fileupload and without, uploaded files are stored either as a byte array in memory, or as a temporary file.  No way around this.
-* It's be possible to use commons-fileupload's request parsing API to read an uploaded file as a stream, directly off of the request, without it being buffered into memory or a file.  See `UploadServlet` and `UploadController.getViaCommonsFileUploadStreamingApi()`.
+* With their standard APIs, both with commons-fileupload and without, uploaded files are stored either as a byte array in memory, or as a temporary file.
+  There's no way around this.
+* It's possible to use commons-fileupload's request parsing API to read an uploaded file as a stream, directly off of the request,
+  without it being buffered into memory or a file.  See `UploadServlet` and `UploadController.getViaCommonsFileUploadStreamingApi()`.
 * Websockets aren't explored, but might be a cool way to do things too.
 
 You can configure things to use commons-fileupload, or the standard Spring multipart implementation.  It appears that the
